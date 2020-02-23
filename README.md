@@ -1,4 +1,4 @@
-Namebase Exchange Api for Python
+Namebase Exchange Api client in Go
 ==
 
 Go client for interacting with Namebase Exchange API.
