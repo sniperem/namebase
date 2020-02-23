@@ -25,6 +25,7 @@ const (
 	baseWsURL = "wss://app.namebase.io:443"
 )
 
+// Namebase is an API clinet of namebase exchange
 type Namebase struct {
 	apiKey     string
 	secretKey  string
@@ -40,6 +41,7 @@ type Namebase struct {
 	symbolInfo map[CurrencyPair]symbolInfo
 }
 
+// NewClient creates a API client
 func NewClient(key, secret string) (*Namebase, error) {
 	client := &Namebase{
 		apiKey:    key,
@@ -102,10 +104,14 @@ func (nb *Namebase) GetDepth(pair CurrencyPair, size int) (*Depth, error) {
 		return nil, err
 	}
 
+	// note that asks are in ascending order here
+	// but decending order is more common for asks
+
 	// reverse
-	// for i := len(d.Asks) - 1; i > 0; i-- {
-	// 	depth.AskList = append(depth.AskList, d.Asks[i])
-	// }
+	for i := len(d.Asks)/2 - 1; i >= 0; i-- {
+		opp := len(d.Asks) - 1 - i
+		d.Asks[i], d.Asks[opp] = d.Asks[opp], d.Asks[i]
+	}
 
 	return d, nil
 }
@@ -149,10 +155,10 @@ func (nb *Namebase) placeOrder(amount, price decimal.Decimal, pair CurrencyPair,
 }
 
 // GetAccount query account info
-func (bn *Namebase) GetAccount() (*Account, error) {
+func (nb *Namebase) GetAccount() (*Account, error) {
 	params := make(map[string]interface{})
 	// coinType optional
-	data, err := bn.do(http.MethodGet, "/api/v0/account", params, true)
+	data, err := nb.do(http.MethodGet, "/api/v0/account", params, true)
 	if err != nil {
 		return nil, err
 	}
@@ -166,22 +172,22 @@ func (bn *Namebase) GetAccount() (*Account, error) {
 	return &acct, nil
 }
 
-// LimitBuy implements the API interface
-func (bn *Namebase) LimitBuy(amount, price decimal.Decimal, pair CurrencyPair) (*Order, error) {
-	return bn.placeOrder(amount, price, pair, "LMT", BuyOrder)
+// LimitBuy buy token at limited price
+func (nb *Namebase) LimitBuy(amount, price decimal.Decimal, pair CurrencyPair) (*Order, error) {
+	return nb.placeOrder(amount, price, pair, "LMT", BuyOrder)
 }
 
-// LimitSell implements the API interface
-func (bn *Namebase) LimitSell(amount, price decimal.Decimal, pair CurrencyPair) (*Order, error) {
-	return bn.placeOrder(amount, price, pair, "LMT", SellOrder)
+// LimitSell sell token at limited price
+func (nb *Namebase) LimitSell(amount, price decimal.Decimal, pair CurrencyPair) (*Order, error) {
+	return nb.placeOrder(amount, price, pair, "LMT", SellOrder)
 }
 
-// MarketBuy implements the API interface
-func (bn *Namebase) MarketBuy(amount decimal.Decimal, pair CurrencyPair) (*Order, error) {
-	return bn.placeOrder(amount, decimal.Zero, pair, "MKT", BuyOrder)
+// MarketBuy buy token at market price
+func (nb *Namebase) MarketBuy(amount decimal.Decimal, pair CurrencyPair) (*Order, error) {
+	return nb.placeOrder(amount, decimal.Zero, pair, "MKT", BuyOrder)
 }
 
-// MarketSell implements the API interface
+// MarketSell sells token at market price
 func (nb *Namebase) MarketSell(amount decimal.Decimal, pair CurrencyPair) (*Order, error) {
 	return nb.placeOrder(amount, decimal.Zero, pair, "MKT", SellOrder)
 }
@@ -200,7 +206,7 @@ func (nb *Namebase) CancelOrder(orderID int, pair CurrencyPair) (bool, error) {
 	return true, nil
 }
 
-// GetOrder implements the API interface
+// GetOrder queries order detail
 func (nb *Namebase) GetOrder(orderID int, pair CurrencyPair) (*Order, error) {
 	params := make(map[string]interface{})
 	params["symbol"] = pair.String()
@@ -230,6 +236,7 @@ func (nb *Namebase) GetOrder(orderID int, pair CurrencyPair) (*Order, error) {
 // 	panic("")
 // }
 
+// Withdraw withdraw currencies from exchange
 func (nb *Namebase) Withdraw(symbol Currency, amount decimal.Decimal, address, memo string) error {
 	params := make(map[string]interface{})
 
@@ -294,7 +301,7 @@ func updateDepth(data DepthRecords, el DepthRecord, ask bool) DepthRecords {
 func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 	wsConn, _, err := websocket.DefaultDialer.Dial(baseWsURL+"/ws/v0/ticker/depth", nil)
 	if err != nil {
-		log.Printf("[namebase] failed to establish a websocket connection", err)
+		log.Print("[namebase] failed to establish a websocket connection", err)
 		return nil, err
 	}
 

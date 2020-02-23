@@ -86,6 +86,7 @@ func (b *DepthRecord) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// DepthRecords is multiple DepthRecord
 type DepthRecords []DepthRecord
 
 func (dr DepthRecords) Len() int {
@@ -100,6 +101,7 @@ func (dr DepthRecords) Less(i, j int) bool {
 	return dr[i].Price.LessThan(dr[j].Price)
 }
 
+// Depth represents order book
 type Depth struct {
 	Bids        []DepthRecord
 	Asks        []DepthRecord
@@ -107,6 +109,7 @@ type Depth struct {
 	LastEventID int64
 }
 
+// Account represents account info
 type Account struct {
 	MakerFee int  `json:"makerFee"`
 	TakerFee int  `json:"takerFee"`
@@ -120,6 +123,7 @@ type Account struct {
 	} `json:"balances"`
 }
 
+// Order is order
 type Order struct {
 	OrderID int `json:"orderId"`
 	Price,
@@ -141,6 +145,7 @@ type symbolInfo struct {
 	QuotePrecision int32    `json:"quotePrecision"`
 	OrderTypes     []string `json:"orderTypes"`
 }
+
 type exchInfo struct {
 	Timezone   string
 	ServerTime int64

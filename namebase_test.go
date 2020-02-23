@@ -7,8 +7,7 @@ import (
 	"github.com/jflyup/decimal"
 )
 
-var nb, _ = NewClient("bb138c2ad56fb17e58370f599013063a97b892ffa899469af664ff5fc1b6c688",
-	"1e5d282ba061b039b849e39746333390a6e27007019200b41d3e1f280c026f0c")
+var nb, _ = NewClient("", "")
 
 func TestExchInfo(t *testing.T) {
 	if symbols, err := nb.exchInfo(); err != nil {
@@ -35,14 +34,14 @@ func TestWithdraw(t *testing.T) {
 }
 
 func TestCancelOrder(t *testing.T) {
-	if _, err := nb.CancelOrder("1733667",
+	if _, err := nb.CancelOrder(1733667,
 		NewCurrencyPair("hns", "btc")); err != nil {
 		t.Errorf("error: %v", err)
 	}
 }
 
 func TestGetOrder(t *testing.T) {
-	if order, err := nb.GetOrder("1733236",
+	if order, err := nb.GetOrder(1733236,
 		NewCurrencyPair("hns", "btc")); err != nil {
 		t.Error(err)
 	} else {
