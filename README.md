@@ -23,7 +23,7 @@ See the raw API documentation calls: https://github.com/namebasehq/exchange-api-
 
 REST API for Namebase Exchange
 ```go
-pair := namebase.NewCurrencyPair("hns", "btc")
+    pair := namebase.NewCurrencyPair("hns", "btc")
 	if d, err := nb.GetDepth(pair, 0); err != nil {
 		log.Fatal(err)
 	} else {
@@ -37,7 +37,7 @@ pair := namebase.NewCurrencyPair("hns", "btc")
 
 WebSocket API for Namebase
 ```go
-if chDepth, err := nb.SubDepth(pair); err != nil {
+    if chDepth, err := nb.SubDepth(pair); err != nil {
 		log.Print("failed to subscribe order book")
 	} else {
 		go func() {
