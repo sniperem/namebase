@@ -7,10 +7,11 @@ import (
 	"github.com/jflyup/decimal"
 )
 
-// KlineInterval is the interval of k line
+// KlineInterval is the interval of k-Line
 type KlineInterval int
 
 const (
+	// KlineInterval1Min
 	KlineInterval1Min  KlineInterval = 1
 	KlineInterval5Min  KlineInterval = 5
 	KlineInterval15Min KlineInterval = 15
@@ -18,10 +19,10 @@ const (
 	KlineInterval1H    KlineInterval = 60
 	KlineInterval4H    KlineInterval = 240
 	KlineInterval1Day  KlineInterval = 1440
-	KlineInterval1Week
-	KlineInterval1Month
+	KlineInterval1Week               = KlineInterval1Day * 7
 )
 
+// OrderSide is either BUY or SELL
 type OrderSide string
 
 const (
@@ -29,6 +30,7 @@ const (
 	SellOrder OrderSide = "SELL"
 )
 
+// Currency is the symbol of crypto currency, such as BTC, ETH, etc.
 type Currency string
 
 // NewCurrency creates a Currency from string

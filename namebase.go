@@ -25,19 +25,11 @@ const (
 	baseWsURL = "wss://app.namebase.io:443"
 )
 
-// Namebase is an API clinet of namebase exchange
+// Namebase is an API client of namebase exchange
 type Namebase struct {
 	apiKey     string
 	secretKey  string
 	httpClient *http.Client
-	// wsConn         *websocket.Conn
-	// createWsLock   sync.Mutex
-	// pubsub         *util.PubSub
-	// topicsRegistry map[string]struct {
-	// 	cmd   interface{}
-	// 	count int
-	// }
-	// topicsMu   sync.Mutex
 	symbolInfo map[CurrencyPair]symbolInfo
 }
 
@@ -50,21 +42,15 @@ func NewClient(key, secret string) (*Namebase, error) {
 		httpClient: &http.Client{Timeout: time.Second * 10},
 	}
 
-	// symbolInfo, err := client.AllSymbols()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	symbolInfo, err := client.exchInfo()
+	if err != nil {
+		return nil, err
+	}
 
-	// client.symbolInfo = symbolInfo
+	client.symbolInfo = symbolInfo
 
 	return client, nil
 }
-
-// GetTicker implements the API interface
-// func (nb *Namebase) GetTicker(pair CurrencyPair) (*Ticker, error) {
-
-// 	return nil, nil
-// }
 
 func (nb *Namebase) exchInfo() (map[CurrencyPair]symbolInfo, error) {
 	data, err := nb.do(http.MethodGet, "/api/v0/info", nil, false)
@@ -79,13 +65,13 @@ func (nb *Namebase) exchInfo() (map[CurrencyPair]symbolInfo, error) {
 
 	m := make(map[CurrencyPair]symbolInfo)
 	for _, s := range info.Symbols {
-		m[NewCurrencyPair("", "")] = s
+		m[NewCurrencyPair(s.BaseAsset, s.QuoteAsset)] = s
 	}
 
 	return m, nil
 }
 
-// GetDepth implements the API interface
+// GetDepth queries the order book of pair
 func (nb *Namebase) GetDepth(pair CurrencyPair, size int) (*Depth, error) {
 	params := make(map[string]interface{})
 	params["symbol"] = pair.String()
@@ -105,9 +91,7 @@ func (nb *Namebase) GetDepth(pair CurrencyPair, size int) (*Depth, error) {
 	}
 
 	// note that asks are in ascending order here
-	// but decending order is more common for asks
-
-	// reverse
+	// but decending order is more common, so I reverse it
 	for i := len(d.Asks)/2 - 1; i >= 0; i-- {
 		opp := len(d.Asks) - 1 - i
 		d.Asks[i], d.Asks[opp] = d.Asks[opp], d.Asks[i]
@@ -116,16 +100,16 @@ func (nb *Namebase) GetDepth(pair CurrencyPair, size int) (*Depth, error) {
 	return d, nil
 }
 
-func (nb *Namebase) placeOrder(amount, price decimal.Decimal, pair CurrencyPair,
+func (nb *Namebase) placeOrder(qty, price decimal.Decimal, pair CurrencyPair,
 	orderType string, side OrderSide) (*Order, error) {
 	info, ok := nb.symbolInfo[pair]
 	if !ok {
 		return nil, errors.New("unsupported symbol")
 	}
 
-	amount = amount.Truncate(info.BasePrecision)
+	qty = qty.Truncate(info.BasePrecision)
 
-	if amount.IsZero() {
+	if qty.IsZero() {
 		return nil, errors.New("qty is zero")
 	}
 
@@ -135,7 +119,7 @@ func (nb *Namebase) placeOrder(amount, price decimal.Decimal, pair CurrencyPair,
 	params["symbol"] = pair.String()
 	params["side"] = strings.ToUpper(string(side))
 	params["type"] = orderType
-	params["quantity"] = amount.String()
+	params["quantity"] = qty.String()
 	if orderType == "LMT" {
 		params["price"] = price.String()
 	}
@@ -299,7 +283,8 @@ func updateDepth(data DepthRecords, el DepthRecord, ask bool) DepthRecords {
 
 // SubDepth implements the API interface
 func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
-	wsConn, _, err := websocket.DefaultDialer.Dial(baseWsURL+"/ws/v0/ticker/depth", nil)
+	path := baseWsURL + "/ws/v0/ticker/depth"
+	wsConn, _, err := websocket.DefaultDialer.Dial(path, nil)
 	if err != nil {
 		log.Print("[namebase] failed to establish a websocket connection", err)
 		return nil, err
@@ -327,12 +312,15 @@ func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 			if err != nil {
 				log.Printf("[namebase] ERROR\tfailed to read from websocket: %v, local addr: %s",
 					err, wsConn.LocalAddr())
+				wsConn.Close()
+				wsConn, _, err = websocket.DefaultDialer.Dial(path, nil)
+				if err != nil {
+					log.Print("[namebase] failed to reconnect to websocket", err)
+					// TODO notify subscriber about this error
+					return
+				}
 
-				// TODO reconnect
-				// if err := nb.reconnectWs(); err != nil {
-				// 	log.Printf("[namebase] ERROR\twebsocket reconnect error: %s", err)
-				// 	return
-				// }
+				continue
 			}
 
 			// reset
@@ -381,7 +369,6 @@ func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 	return chDepth, nil
 }
 
-// SubTicker implements the API interface
 // func (c *Namebase) SubTicker(pair CurrencyPair, handler func(*Ticker)) error {
 // 	return nil
 // }
