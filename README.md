@@ -1,4 +1,4 @@
-Namebase Exchange Api for Python
+Namebase Exchange API client in Go
 ==
 
 Go client for interacting with Namebase Exchange API.
@@ -7,7 +7,7 @@ Go client for interacting with Namebase Exchange API.
 
 Some requests require an API key. You can generate a key from https://www.namebase.io/pro.
 
-See the raw API documentation calls: https://github.com/namebasehq/exchange-api-documentation/
+See the original API documentation: https://github.com/namebasehq/exchange-api-documentation/
 
 ## Installation
 
