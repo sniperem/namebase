@@ -320,6 +320,11 @@ func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 					return
 				}
 
+				snapshot, err = nb.GetDepth(pair, 50)
+				if err != nil {
+					return
+				}
+
 				continue
 			}
 
