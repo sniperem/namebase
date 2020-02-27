@@ -21,7 +21,7 @@ See the original API documentation: https://github.com/namebasehq/exchange-api-d
 
 ### Usage
 
-REST API for Namebase Exchange
+query order book and place order:
 ```go
 pair := namebase.NewCurrencyPair("hns", "btc")
 if d, err := nb.GetDepth(pair, 0); err != nil {
@@ -35,7 +35,7 @@ if o, err := nb.LimitBuy(decimal.NewFromFloat(100), decimal.NewFromFloat(0.00009
 }
 ```
 
-WebSocket API for Namebase
+subscribe order book updates:
 ```go
 if chDepth, err := nb.SubDepth(pair); err != nil {
     log.Print("failed to subscribe order book")
