@@ -8,18 +8,17 @@ import (
 )
 
 // KlineInterval is the interval of k-Line
-type KlineInterval int
+type KlineInterval string
 
 const (
 	// KlineInterval1Min
-	KlineInterval1Min  KlineInterval = 1
-	KlineInterval5Min  KlineInterval = 5
-	KlineInterval15Min KlineInterval = 15
-	KlineInterval30Min KlineInterval = 30
-	KlineInterval1H    KlineInterval = 60
-	KlineInterval4H    KlineInterval = 240
-	KlineInterval1Day  KlineInterval = 1440
-	KlineInterval1Week               = KlineInterval1Day * 7
+	KlineInterval1Min  KlineInterval = "1m"
+	KlineInterval5Min  KlineInterval = "5m"
+	KlineInterval15Min KlineInterval = "15m"
+	KlineInterval1H    KlineInterval = "1h"
+	KlineInterval12H   KlineInterval = "12h"
+	KlineInterval1Day  KlineInterval = "1d"
+	KlineInterval1Week               = "1w"
 )
 
 // OrderSide is either BUY or SELL
@@ -109,6 +108,28 @@ type Depth struct {
 	Asks        []DepthRecord
 	Ts          int64
 	LastEventID int64
+}
+
+// Kline is candlestick
+type Kline struct {
+	OpenTime       int64  `json:"openTime"`
+	CloseTime      int64  `json:"closeTime"`
+	OpenPrice      string `json:"openPrice"`
+	HighPrice      string `json:"highPrice"`
+	LowPrice       string `json:"lowPrice"`
+	ClosePrice     string `json:"closePrice"`
+	Volume         string `json:"volume"`
+	QuoteVolume    string `json:"quoteVolume"`
+	NumberOfTrades int    `json:"numberOfTrades"`
+}
+
+type Trade struct {
+	TradeID       int    `json:"tradeId"`
+	Price         string `json:"price"`
+	Quantity      string `json:"quantity"`
+	QuoteQuantity string `json:"quoteQuantity"`
+	CreatedAt     int64  `json:"createdAt"`
+	IsBuyerMaker  bool   `json:"isBuyerMaker"`
 }
 
 // Account represents account info

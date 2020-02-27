@@ -210,17 +210,80 @@ func (nb *Namebase) GetOrder(orderID int, pair CurrencyPair) (*Order, error) {
 	return o, nil
 }
 
-// GetKlines implements the API interface
-// func (nb *Namebase) GetKlines(pair CurrencyPair, interval KlineInterval, size, start int) ([]*Kline, error) {
-// 	panic("")
-// }
+// OpenOrders lists all open orders of a trading pair
+func (nb *Namebase) OpenOrders(pair CurrencyPair) ([]Order, error) {
+	params := make(map[string]interface{})
+	params["symbol"] = pair.String()
+
+	data, err := nb.do(http.MethodGet, "/api/v0/order/open", params, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var orders []Order
+
+	if err := json.Unmarshal(data, &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+// GetKlines returns kline for a symbol
+func (nb *Namebase) GetKlines(pair CurrencyPair, interval KlineInterval, limit int) ([]Kline, error) {
+	params := make(map[string]interface{})
+	params["symbol"] = pair.String()
+	params["interval"] = interval
+
+	if limit != 0 {
+		params["limit"] = limit
+	}
+
+	data, err := nb.do(http.MethodGet, "/api/v0/ticker/klines", params, true)
+	if err != nil {
+		return nil, err
+	}
+
+	var klines []Kline
+
+	if err := json.Unmarshal(data, &klines); err != nil {
+		return nil, err
+	}
+
+	return klines, nil
+}
 
 // GetTrades implements the API interface
 // func (nb *Namebase) GetTrades(pair CurrencyPair, size int) ([]*Trade, error) {
 // 	panic("")
 // }
 
-// Withdraw withdraw currencies from exchange
+// DepositAddr generates a deposit address
+// for now, no memo is needed
+func (nb *Namebase) DepositAddr(symbol Currency) (string, error) {
+	params := make(map[string]interface{})
+
+	params["asset"] = string(symbol)
+
+	data, err := nb.do(http.MethodPost, "/api/v0/deposit/address", params, true)
+	if err != nil {
+		return "", err
+	}
+
+	result := struct {
+		Address string `json:"address"`
+		Success bool   `json:"success"`
+		Asset   string `json:"asset"`
+	}{}
+
+	if err := json.Unmarshal(data, &result); err != nil {
+		return "", err
+	}
+
+	return result.Address, nil
+}
+
+// Withdraw withdraw currencies from exchange,
 func (nb *Namebase) Withdraw(symbol Currency, amount decimal.Decimal, address, memo string) error {
 	params := make(map[string]interface{})
 
@@ -281,7 +344,7 @@ func updateDepth(data DepthRecords, el DepthRecord, ask bool) DepthRecords {
 	return data
 }
 
-// SubDepth implements the API interface
+// SubDepth subscribes order book updates of a trading pair
 func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 	path := baseWsURL + "/ws/v0/ticker/depth"
 	wsConn, _, err := websocket.DefaultDialer.Dial(path, nil)
@@ -378,11 +441,53 @@ func (nb *Namebase) SubDepth(pair CurrencyPair) (chan Depth, error) {
 // 	return nil
 // }
 
-// SubTrades implements the API interface
-// func (nb *Namebase) SubTrades(pair CurrencyPair, handler func([]*Trade)) error {
+// SubTrades subscribes trade info of a trading pair
+// this interface seems down for now
+func (nb *Namebase) SubTrades(pair CurrencyPair) (chan Trade, error) {
+	path := baseWsURL + "/ws/v0/stream/trades'"
+	wsConn, _, err := websocket.DefaultDialer.Dial(path, nil)
+	if err != nil {
+		log.Print("[namebase] failed to establish a websocket connection", err)
+		return nil, err
+	}
 
-// 	return nil
-// }
+	chTrade := make(chan Trade)
+
+	go func() {
+		t := struct {
+			Trade
+			EventType string `json:"eventType"`
+			EventTime int64  `json:"eventTime"`
+			Symbol    string `json:"symbol"`
+		}{}
+
+		for {
+			_, data, err := wsConn.ReadMessage()
+			if err != nil {
+				log.Printf("[namebase] ERROR\tfailed to read from websocket: %v, local addr: %s",
+					err, wsConn.LocalAddr())
+				wsConn.Close()
+				wsConn, _, err = websocket.DefaultDialer.Dial(path, nil)
+				if err != nil {
+					log.Print("[namebase] failed to reconnect to websocket", err)
+					// TODO notify subscriber about this error
+					return
+				}
+
+				continue
+			}
+
+			if err := json.Unmarshal(data, &t); err != nil {
+				log.Printf("failed to unmarshal: %s, raw data: %s", err, string(data))
+				continue
+			}
+
+			chTrade <- t.Trade
+		}
+	}()
+
+	return chTrade, nil
+}
 
 // do invokes the given API command with the given data
 // sign indicates whether the api call should be done with signed payload

@@ -81,6 +81,14 @@ func TestLimitSell(t *testing.T) {
 	}
 }
 
+func TestGetDepth(t *testing.T) {
+	if d, err := nb.GetDepth(NewCurrencyPair("hns", "btc"), 0); err != nil {
+		t.Error(err)
+	} else {
+		log.Printf("ask 1: %+v, bid 1: %+v", d.Asks[0], d.Bids[0])
+	}
+}
+
 func TestSubDepth(t *testing.T) {
 	pair := NewCurrencyPair("hns", "btc")
 
@@ -94,10 +102,14 @@ func TestSubDepth(t *testing.T) {
 	}
 }
 
-func TestGetDepth(t *testing.T) {
-	if d, err := nb.GetDepth(NewCurrencyPair("hns", "btc"), 0); err != nil {
+func TestSubTrade(t *testing.T) {
+	pair := NewCurrencyPair("hns", "btc")
+
+	if ch, err := nb.SubTrades(pair); err != nil {
 		t.Error(err)
 	} else {
-		log.Printf("ask 1: %+v, bid 1: %+v", d.Asks[0], d.Bids[0])
+		for t := range ch {
+			log.Printf("latest trade: %+v", t)
+		}
 	}
 }

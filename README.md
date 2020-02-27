@@ -21,7 +21,7 @@ See the original API documentation: https://github.com/namebasehq/exchange-api-d
 
 ### Usage
 
-query order book and place order:
+query order book:
 ```go
 pair := namebase.NewCurrencyPair("hns", "btc")
 if d, err := nb.GetDepth(pair, 0); err != nil {
@@ -29,13 +29,34 @@ if d, err := nb.GetDepth(pair, 0); err != nil {
 } else {
     log.Printf("ask 1: %+v, bid 1: %+v", d.Asks[0], d.Bids[0])
 }
+```
 
+place order
+```go
 if o, err := nb.LimitBuy(decimal.NewFromFloat(100), decimal.NewFromFloat(0.00009),pair); err != nil {
     log.Print("failed to buy: ", err)
 }
 ```
 
-subscribe order book updates:
+query account info
+```go
+if acct, err := nb.GetAccount(); err != nil {
+    log.Print("failed to get account info: ", err)
+} else {
+    log.Printf("%+v", acct)
+}
+```
+
+withdraw assets (**change deposit address before testing, or it would deposit to my wallet**)
+```go
+tokenAmount := decimal.NewFromFloat(2000)
+if err := nb.Withdraw("HNS", tokenAmount,
+    "hs1qc7kmegpjkn4qrhuactul9feu69nvsqnjpkk6sy", ""); err != nil {
+    t.Error(err)
+	}
+```
+
+Subscribe order book updates:
 ```go
 if chDepth, err := nb.SubDepth(pair); err != nil {
     log.Print("failed to subscribe order book")
@@ -43,6 +64,19 @@ if chDepth, err := nb.SubDepth(pair); err != nil {
     go func() {
         for d := range chDepth {
             log.Printf("ask 1: %+v, bid 1: %+v", d.Asks[0], d.Bids[0])
+        }
+    }()
+}
+```
+
+Subscribe trade info of a pair:
+```go
+if chTrade, err := nb.SubPair(pair); err != nil {
+    log.Print("failed to subscribe trade info")
+} else {
+    go func() {
+        for t := range chTrade {
+            log.Printf("latest trade: %+v",t)
         }
     }()
 }
