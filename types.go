@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jflyup/decimal"
+	"github.com/shopspring/decimal"
 )
 
 // KlineInterval is the interval of k-Line

@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/jflyup/decimal"
+	"github.com/shopspring/decimal"
 )
 
 var nb, _ = NewClient("", "")

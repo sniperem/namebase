@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/jflyup/decimal"
+	"github.com/shopspring/decimal"
 
 	"github.com/sniperem/namebase"
 )

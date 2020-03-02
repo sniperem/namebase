@@ -16,8 +16,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/jflyup/decimal"
-	"github.com/jflyup/goup/util"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -495,7 +494,7 @@ func (nb *Namebase) do(method, endpoint string, params map[string]interface{}, s
 	var req *http.Request
 	var err error
 	if sign {
-		params["timestamp"] = util.CurrentTimeMillis()
+		params["timestamp"] = time.Now().UnixNano() / int64(time.Millisecond) / int64(time.Nanosecond)
 	}
 	if method == http.MethodGet {
 		var path string
