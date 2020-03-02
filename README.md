@@ -21,7 +21,7 @@ See the original API documentation: https://github.com/namebasehq/exchange-api-d
 
 ### Usage
 
-query order book:
+Query order book:
 ```go
 pair := namebase.NewCurrencyPair("hns", "btc")
 if d, err := nb.GetDepth(pair, 0); err != nil {
@@ -31,14 +31,14 @@ if d, err := nb.GetDepth(pair, 0); err != nil {
 }
 ```
 
-place order
+Place order
 ```go
 if o, err := nb.LimitBuy(decimal.NewFromFloat(100), decimal.NewFromFloat(0.00009),pair); err != nil {
     log.Print("failed to buy: ", err)
 }
 ```
 
-query account info
+Query account info
 ```go
 if acct, err := nb.GetAccount(); err != nil {
     log.Print("failed to get account info: ", err)
@@ -47,7 +47,7 @@ if acct, err := nb.GetAccount(); err != nil {
 }
 ```
 
-withdraw assets (**change deposit address before testing, or it would deposit to my wallet**)
+Withdraw assets (**change deposit address before testing, or it would deposit to my wallet**)
 ```go
 tokenAmount := decimal.NewFromFloat(2000)
 if err := nb.Withdraw("HNS", tokenAmount,
@@ -56,7 +56,7 @@ if err := nb.Withdraw("HNS", tokenAmount,
 	}
 ```
 
-Subscribe order book updates:
+Maintain a local order book:
 ```go
 if chDepth, err := nb.SubDepth(pair); err != nil {
     log.Print("failed to subscribe order book")
