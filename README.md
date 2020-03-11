@@ -47,7 +47,7 @@ if acct, err := nb.GetAccount(); err != nil {
 }
 ```
 
-Withdraw assets (**change deposit address before testing, or it would deposit to my wallet** :stuck_out_tongue:
+Withdraw assets (**change deposit address before testing, or it would deposit to my wallet**) :stuck_out_tongue:
 ```go
 tokenAmount := decimal.NewFromFloat(2000)
 if err := nb.Withdraw("HNS", tokenAmount,
