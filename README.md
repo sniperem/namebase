@@ -69,9 +69,9 @@ if chDepth, err := nb.SubDepth(pair); err != nil {
 }
 ```
 
-Subscribe trade info of a pair:
+Subscribe trade info of pair:
 ```go
-if chTrade, err := nb.SubPair(pair); err != nil {
+if chTrade, err := nb.SubTrades(pair); err != nil {
     log.Print("failed to subscribe trade info")
 } else {
     go func() {
