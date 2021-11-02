@@ -238,7 +238,7 @@ func (nb *Namebase) GetKlines(pair CurrencyPair, interval KlineInterval, limit i
 		params["limit"] = limit
 	}
 
-	data, err := nb.do(http.MethodGet, "/api/v0/ticker/klines", params, true)
+	data, err := nb.do(http.MethodGet, "/api/v0/ticker/klines", params, false)
 	if err != nil {
 		return nil, err
 	}
@@ -540,6 +540,12 @@ func (nb *Namebase) do(method, endpoint string, params map[string]interface{}, s
 	// dump, _ = httputil.DumpResponse(resp, true)
 	// log.Print("raw resp: ", string(dump))
 
+	if resp.StatusCode != 200 {
+		dump, _ := httputil.DumpResponse(resp, true)
+		return nil, fmt.Errorf("http code: %d, body: %s",
+			resp.StatusCode, string(dump))
+	}
+	
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -550,19 +556,8 @@ func (nb *Namebase) do(method, endpoint string, params map[string]interface{}, s
 		Code    string
 	}{}
 
-	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("failed to unmarshal json: %v", err)
-		return nil, err
-	}
-
-	if result.Code != "" {
+	if err := json.Unmarshal(body, &result); err == nil && result.Code != "" {
 		return nil, errors.New(result.Message)
-	}
-
-	if resp.StatusCode != 200 {
-		dump, _ := httputil.DumpResponse(resp, true)
-		return nil, fmt.Errorf("http code: %d, body: %s",
-			resp.StatusCode, string(dump))
 	}
 
 	return body, err
