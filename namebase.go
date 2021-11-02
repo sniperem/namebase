@@ -550,12 +550,7 @@ func (nb *Namebase) do(method, endpoint string, params map[string]interface{}, s
 		Code    string
 	}{}
 
-	if err := json.Unmarshal(body, &result); err != nil {
-		log.Printf("failed to unmarshal json: %v", err)
-		return nil, err
-	}
-
-	if result.Code != "" {
+	if err := json.Unmarshal(body, &result); err == nil && result.Code != "" {
 		return nil, errors.New(result.Message)
 	}
 
