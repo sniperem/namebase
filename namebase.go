@@ -238,7 +238,7 @@ func (nb *Namebase) GetKlines(pair CurrencyPair, interval KlineInterval, limit i
 		params["limit"] = limit
 	}
 
-	data, err := nb.do(http.MethodGet, "/api/v0/ticker/klines", params, true)
+	data, err := nb.do(http.MethodGet, "/api/v0/ticker/klines", params, false)
 	if err != nil {
 		return nil, err
 	}
